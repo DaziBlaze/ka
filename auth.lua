@@ -1,67 +1,32 @@
 local License = license or ""
 
 local HttpService = game:GetService("HttpService")
-local StarterGui = game:GetService("StarterGui")
-local LuaName = "KeyAuth Lua Example"
-
-StarterGui:SetCore("SendNotification", {
-	Title = LuaName,
-	Text = "Initializing Authentication...",
-	Duration = 5
-})
-
-local initialized = false
-local sessionid = ""
 
 local name = "Keter"
 local ownerid = "xCcjVHkQgx"
 local version = "1.0"
 
-local req = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. name .. '&ownerid=' .. ownerid .. '&type=init&ver=' .. version)
+-- initialize application
+local initReq = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. name .. '&ownerid=' .. ownerid .. '&type=init&ver=' .. version)
+if initReq == "KeyAuth_Invalid" then return end
 
-if req == "KeyAuth_Invalid" then
-	print("Error: Application not found.")
-	StarterGui:SetCore("SendNotification", {
-		Title = LuaName,
-		Text = "Error: Application not found.",
-		Duration = 3
-	})
-	return
-end
+local initData = HttpService:JSONDecode(initReq)
+if not initData.success then return end
 
-local data = HttpService:JSONDecode(req)
+local sessionid = initData.sessionid
+local userId = game.Players.LocalPlayer.UserId
 
-if data.success then
-	initialized = true
-	sessionid = data.sessionid
-elseif data.message == "invalidver" then
-	print("Error: Wrong application version.")
-	StarterGui:SetCore("SendNotification", {
-		Title = LuaName,
-		Text = "Error: Wrong application version.",
-		Duration = 3
-	})
-	return
-else
-	print("Error: " .. data.message)
-	return
-end
+-- license check (you could add your own IP/HWID logic server-side here)
+local licenseReq = game:HttpGet(
+    'https://keyauth.win/api/1.1/?name=' .. name ..
+    '&ownerid=' .. ownerid ..
+    '&type=license&key=' .. License ..
+    '&ver=' .. version ..
+    '&sessionid=' .. sessionid ..
+    '&userdata=' .. tostring(userId)
+)
+local licenseData = HttpService:JSONDecode(licenseReq)
 
-print("\n\nLicensing...\n")
-local req = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. name .. '&ownerid=' .. ownerid .. '&type=license&key=' .. License .. '&ver=' .. version .. '&sessionid=' .. sessionid)
-local data = HttpService:JSONDecode(req)
+if not licenseData.success then return end
 
-if not data.success then
-	StarterGui:SetCore("SendNotification", {
-		Title = LuaName,
-		Text = "Error: " .. data.message,
-		Duration = 5
-	})
-	return
-end
-
-StarterGui:SetCore("SendNotification", {
-	Title = LuaName,
-	Text = "Successfully Authorized :)",
-	Duration = 5
-})
+print("🔑 Successfully whitelisted by Hardbuild")
