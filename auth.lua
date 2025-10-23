@@ -31,7 +31,7 @@ local licenseReq = game:HttpGet(licenseUrl)
 local data = HttpService:JSONDecode(licenseReq)
 
 if data.success then
-    print("🔑 Successfully whitelisted by Hardbuild")
+    print("🔑 Successfully whitelisted user, executing script...")
 else
     print("⛔ Error: " .. (data.message or "Authentication failed"))
 end
